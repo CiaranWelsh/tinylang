@@ -46,6 +46,23 @@ set(TINYLANG_INCLUDE_DIR
         "${TINYLANG_SOURCE_INCLUDE_DIR}"
         )
 
+# Available components:
+#    ./llvm-config --components
+#  aggressiveinstcombine all all-targets analysis asmparser asmprinter binaryformat
+#  bitreader bitstreamreader bitwriter cfguard codegen core coroutines coverage
+#  debuginfocodeview debuginfodwarf debuginfogsym debuginfomsf debuginfopdb
+#  demangle dlltooldriver dwarflinker engine executionengine extensions
+#  filecheck frontendopenacc frontendopenmp fuzzmutate globalisel hellonew
+#  instcombine instrumentation interfacestub interpreter ipo irreader
+#  jitlink libdriver lineeditor linker lto mc mca mcdisassembler mcjit
+#  mcparser mirparser native nativecodegen objcarcopts object objectyaml
+#  option orcjit orcshared orctargetprocess passes profiledata remarks
+#  runtimedyld scalaropts selectiondag support symbolize tablegen target
+#  textapi transformutils vectorize windowsmanifest x86 x86asmparser
+#  x86codegen x86desc x86disassembler x86info xray
+llvm_map_components_to_libnames(llvm_libs support core irreader)
+
+
 include_directories(BEFORE
         "${TINYLANG_BINARY_INCLUDE_DIR}"
         "${TINYLANG_SOURCE_INCLUDE_DIR}"
@@ -54,7 +71,34 @@ include_directories(BEFORE
 
 add_subdirectory(lib)
 add_subdirectory(tools)
+add_subdirectory(test)
 
+
+message(STATUS "
+Configuration Summary
+---------------------
+
+Tinylang Variables:
+    TINYLANG_BINARY_INCLUDE_DIR      ${TINYLANG_BINARY_INCLUDE_DIR}
+    TINYLANG_SOURCE_INCLUDE_DIR      ${TINYLANG_SOURCE_INCLUDE_DIR}
+    TINYLANG_INCLUDE_DIR             ${TINYLANG_INCLUDE_DIR}
+
+LLVM Variables:
+    LLVM_DEFINITIONS                 ${LLVM_DEFINITIONS}
+    LLVM_INCLUDE_DIR                 ${LLVM_INCLUDE_DIR}
+    LLVM_LIBRARY_DIR                 ${LLVM_LIBRARY_DIR}
+    LLVM_LIBRARIES                   ${LLVM_LIBRARIES}
+
+LLVM Variables:
+    LLVM_CMAKE_DIR                   ${LLVM_CMAKE_DIR}
+    LLVM_DEFINITIONS                 ${LLVM_DEFINITIONS}
+    LLVM_ENABLE_ASSERTIONS           ${LLVM_ENABLE_ASSERTIONS}
+    LLVM_ENABLE_EH                   ${LLVM_ENABLE_EH}
+    LLVM_ENABLE_RTTI                 ${LLVM_ENABLE_RTTI}
+    LLVM_INCLUDE_DIRS                ${LLVM_INCLUDE_DIRS}
+    LLVM_PACKAGE_VERSION             ${LLVM_PACKAGE_VERSION}
+    LLVM_TOOLS_BINARY_DIR            ${LLVM_TOOLS_BINARY_DIR}
+")
 
 
 

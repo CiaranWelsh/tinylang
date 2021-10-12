@@ -34,27 +34,26 @@ void Lexer::next(Token &token) {
         // start the end at the next character
         // and iterate the end until no more letters
         const char *end = BufferPtr + 1;
-        while (charinfo::isLetter(end)) {
+        while (charinfo::isLetter(*end)) {
             ++end;
         }
         llvm::StringRef Name(BufferPtr, end - BufferPtr);
-        Token::TokenKind kind = Named == "with" ? Token::KW_with : Token::ident;
+        Token::TokenKind kind = Name == "with" ? Token::KW_with : Token::ident;
         formToken(token, end, kind);
         return;
     }
 
         // check for digit
-
     else if (charinfo::isDigit(*BufferPtr)) {
         const char *end = BufferPtr + 1;
-        while (charinfo::isDigit(end)) {
+        while (charinfo::isDigit(*end)) {
             ++end;
         }
         formToken(token, end, Token::number);
         return;
     } else {
         switch (*BufferPtr) {
-#define CASE(Ch, tok) case ch : formToken(Token, BufferPtr+1, tok); break
+#define CASE(ch, tok) case ch : formToken(token, BufferPtr + 1, tok); break
             CASE('+', Token::plus);
             CASE('-', Token::minus);
             CASE('*', Token::star);
@@ -65,10 +64,9 @@ void Lexer::next(Token &token) {
             CASE(',', Token::Token::comma);
 #undef CASE
             default:
-                formToken(Token, BufferPtr+1, Token::unknown);
+                formToken(token, BufferPtr + 1, Token::unknown);
         }
     }
-    return;
 }
 
 void Lexer::formToken(Token &Tok, const char *TokEnd, Token::TokenKind Kind) {

@@ -19,7 +19,7 @@ namespace {
             VoidTy = Type::getVoidTy(M->getContext());
             Int32Ty = Type::getInt32Ty(M->getContext());
             Int8PtrTy = Type::getInt8PtrTy(M->getContext());
-            Int8PtrPtrTy = Int8PtrTy.getPointerTo();
+            Int8PtrPtrTy = Int8PtrTy->getPointerTo();
             Int32Zero = ConstantInt::get(Int32Ty, 0, true);
         }
 
@@ -32,7 +32,7 @@ namespace {
             );
             BasicBlock *BB = BasicBlock::Create(M->getContext(), "entry", MainFn);
             Builder.SetInsertPoint(BB);
-            Tree.accept(*this);
+            Tree->accept(*this);
 
             FunctionType *CalcWriteFnTy = FunctionType::get(VoidTy, {Int32Ty}, false);
             Function *CalcWriteFn = Function::Create(CalcWriteFnTy, GlobalValue::ExternalLinkage, "calc_write", M);
@@ -108,7 +108,13 @@ namespace {
 
 
 
-
+void CodeGen::compile(AST *Tree) {
+    LLVMContext Ctx;
+    Module* M = new Module("calc.expr", Ctx);
+    ToIRVisitor ToIR(M);
+    ToIR.run(Tree);
+    M->print(outs(), nullptr);
+}
 
 
 

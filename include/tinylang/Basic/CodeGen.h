@@ -5,6 +5,7 @@
 #ifndef TINYLANG_CODEGEN_H
 #define TINYLANG_CODEGEN_H
 
+#include "tinylang/Basic/AST.h"
 
 class CodeGen {
 public:

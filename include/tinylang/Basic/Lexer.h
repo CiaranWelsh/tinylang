@@ -8,6 +8,16 @@
 #include "llvm/ADT/StringRef.h" // C string + its length
 #include "llvm/Support/MemoryBuffer.h" // read only access to a memory buffer
 
+
+namespace charinfo {
+    LLVM_READNONE inline bool isWhitespace(char c);
+
+    LLVM_READNONE inline bool isDigit(char c);
+
+    LLVM_READNONE inline bool isLetter(char c);
+
+}
+
 class Lexer;
 
 class Token {
@@ -29,12 +39,16 @@ public:
         KW_with
     };
 
+    Token() = default;
+
+    Token(TokenKind tk, llvm::StringRef s)
+        : Kind(tk), Text(s){}
+
     TokenKind getKind() const {
-        return kindl;
+        return Kind;
     }
 
-    llvm::StringRef getText
-    const {
+    llvm::StringRef getText() const {
         return Text;
     };
 
@@ -61,12 +75,20 @@ private:
 
 class Lexer {
 public:
-    Lexer(const llvm::StringRef& Buffer)
+    explicit Lexer(const llvm::StringRef& Buffer)
         :
         BufferStart(Buffer.begin()),
         BufferPtr(Buffer.begin()){}
 
     void next(Token& token);
+
+    const char* getBufferStart(){
+        return BufferStart;
+    }
+
+    const char* getBufferPtr(){
+        return BufferPtr;
+    }
 
 private:
 
@@ -74,6 +96,7 @@ private:
 
     const char* BufferStart;
     const char* BufferPtr;
+
 };
 
 #endif //TINYLANG_LEXER_H

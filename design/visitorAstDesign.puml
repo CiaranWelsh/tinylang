@@ -1,0 +1,25 @@
+@startuml
+
+abstract class ASTVisitor
+
+class ConcreteVisitor
+
+ASTVisitor <|-- ConcreteVisitor
+
+class AST {
+    accept(ASTVisitor* v) = 0
+}
+
+class Expr
+class Factor
+class BinaryOp
+class WithDecl
+
+AST <|-- Expr
+AST <|-- WithDecl
+Expr <|-- Factor
+Expr <|-- BinaryOp
+
+AST *. ASTVisitor
+
+@enduml

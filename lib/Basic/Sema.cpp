@@ -2,20 +2,21 @@
 // Created by Ciaran on 12/10/2021.
 //
 
+#include <llvm/Support/raw_ostream.h>
 #include "tinylang/Basic/Sema.h"
 #include "llvm/ADT/StringSet.h"
 
 namespace {
-    class DeclCheck : public AstVisitor {
+    class DeclCheck : public ASTVisitor {
     public:
-        DeclCheck() : HasError(false) = {}
+        DeclCheck() : HasError(false) {}
 
         bool hasError() {
             return HasError;
         }
 
         void visit(Factor &Node) override {
-            if (Node.getKind() == Factr::Ident){
+            if (Node.getKind() == Factor::Ident){
                 if (Scope.find(Node.getVal()) == Scope.end()){
                     error(Not, Node.getVal());
                 }
@@ -37,7 +38,9 @@ namespace {
 
         void visit(WithDecl& Node) override {
             for (auto I = Node.begin(), E = Node.end(); I != E; ++I){
-                if (Scope.insert(*I).second)
+                // the second element of the pair returned by Scope.insert
+                // indicates whether the insertion took place or not.
+                if (!Scope.insert(*I).second)
                     error(Twice, *I);
             }
             if (Node.getExpr())

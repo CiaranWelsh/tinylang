@@ -12,16 +12,21 @@
 class Parser {
 public:
 
-    Parser(Lexer& Lex): Lex(Lex), HasError(false){
+    /**
+     * Constructor for Parser
+     *
+     * @details calls the advance method which populates the
+     * first Tok
+     */
+    explicit Parser(Lexer& Lex): Lex(Lex), HasError(false){
         advance();
     }
 
-    bool hasError(){
+    bool hasError() const{
         return HasError;
     }
 
     AST* parse();
-
 
 private:
     AST *parseCalc();
@@ -37,10 +42,17 @@ private:
         HasError = true;
     }
 
+    /**
+     * @brief advances the current token to the next
+     */
     void advance() {
         Lex.next(Tok);
     }
 
+    /**
+     * @brief throws error if Tok::Kind
+     * is not equal to @param Kind.
+     */
     bool expect(Token::TokenKind Kind) {
         if (Tok.getKind() != Kind) {
             error();
@@ -49,6 +61,12 @@ private:
         return false;
     }
 
+    /**
+     * @brief if the current Tok is
+     * of type @param Kind return true
+     * otherwise advance to the next token
+     * and return false
+     */
     bool consume(Token::TokenKind Kind) {
         if (expect(Kind)) {
             return true;

@@ -18,7 +18,7 @@ class BinaryOp;
 
 class WithDecl;
 
-class AstVisitor {
+class ASTVisitor {
 public:
     virtual void visit(AST &) {};
 
@@ -62,7 +62,7 @@ public:
         return Val;
     }
 
-    void accept(AstVisitor &V) override {
+    void accept(ASTVisitor &V) override {
         V.visit(*this);
     }
 
@@ -92,7 +92,7 @@ public:
         return Op;
     }
 
-    virtual void accept(AstVisitor &V) override {
+    virtual void accept(ASTVisitor &V) override {
         V.visit(*this);
     }
 
@@ -104,6 +104,7 @@ private:
 };
 
 class WithDecl : public AST {
+    using VarVector = llvm::SmallVector<llvm::StringRef, 8>;
 public:
     WithDecl(llvm::SmallVector<llvm::StringRef, 8> Vars, Expr *E)
             : Vars(Vars), E(E) {};
@@ -120,12 +121,11 @@ public:
         return E;
     }
 
-    void accept(AstVisitor &V) override {
+    void accept(ASTVisitor &V) override {
         V.visit(*this);
     }
 
 private:
-    using VarVector = llvm::SmallVector<llvm::StringRef, 8>;
     VarVector Vars;
     Expr *E;
 };
