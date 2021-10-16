@@ -1,4 +1,4 @@
-add_subdirectory(googletest-master)
+add_subdirectory(../../googletest-master)
 
 
 macro(add_test_executable TARGET)

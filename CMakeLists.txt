@@ -1,10 +1,13 @@
 cmake_minimum_required(VERSION 3.20)
+
+
+
 if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     project(tinylang)
 
     set(CMAKE_CXX_STANDARD 20)
 
-    find_package(LLVM CONFIG REQUIRED)
+    find_package(LLVM CONFIG REQUIRED HINTS "D:/llvm-project/install-llvm-rel")
 
     list(APPEND CMAKE_MODULE_PATH "${LLVM_CMAKE_DIR}")
     include(HandleLLVMOptions)
@@ -23,56 +26,13 @@ if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     set(TINYLANG_BUILT_STANDALONE ON)
 endif (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
 
-list(APPEND CMAKE_MODULE_PATH
-        "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
+list(APPEND CMAKE_MODULE_PATH "cmake/modules")
 
 if (CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR AND NOT MSVC_IDE)
     message(FATAL_ERROR "In-source builds are not allowed.")
 endif ()
 
-
-set(TINYLANG_VERSION_STRING "0.1")
-configure_file(
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/tinylang/Basic/Version.inc.in
-        ${CMAKE_CURRENT_BINARY_DIR}/include/tinylang/Basic/Version.inc
-)
-
-include(AddTinylang)
-
-set(TINYLANG_BINARY_INCLUDE_DIR "${CMAKE_CURRENT_BINARY_DIR}/include")
-set(TINYLANG_SOURCE_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
-set(TINYLANG_INCLUDE_DIR
-        "${TINYLANG_BINARY_INCLUDE_DIR}"
-        "${TINYLANG_SOURCE_INCLUDE_DIR}"
-        )
-
-# Available components:
-#    ./llvm-config --components
-#  aggressiveinstcombine all all-targets analysis asmparser asmprinter binaryformat
-#  bitreader bitstreamreader bitwriter cfguard codegen core coroutines coverage
-#  debuginfocodeview debuginfodwarf debuginfogsym debuginfomsf debuginfopdb
-#  demangle dlltooldriver dwarflinker engine executionengine extensions
-#  filecheck frontendopenacc frontendopenmp fuzzmutate globalisel hellonew
-#  instcombine instrumentation interfacestub interpreter ipo irreader
-#  jitlink libdriver lineeditor linker lto mc mca mcdisassembler mcjit
-#  mcparser mirparser native nativecodegen objcarcopts object objectyaml
-#  option orcjit orcshared orctargetprocess passes profiledata remarks
-#  runtimedyld scalaropts selectiondag support symbolize tablegen target
-#  textapi transformutils vectorize windowsmanifest x86 x86asmparser
-#  x86codegen x86desc x86disassembler x86info xray
-llvm_map_components_to_libnames(llvm_libs support core irreader)
-
-
-include_directories(BEFORE
-        "${TINYLANG_BINARY_INCLUDE_DIR}"
-        "${TINYLANG_SOURCE_INCLUDE_DIR}"
-        )
-
-
-add_subdirectory(lib)
-add_subdirectory(tools)
-add_subdirectory(test)
-
+add_subdirectory(Chapter10JITMyself)
 
 message(STATUS "
 Configuration Summary

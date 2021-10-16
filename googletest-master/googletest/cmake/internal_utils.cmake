@@ -312,7 +312,7 @@ endfunction()
 # Installs the specified targets and configures the associated pkgconfig files.
 function(install_project)
   if(INSTALL_GTEST)
-    install(DIRECTORY "${PROJECT_SOURCE_DIR}/include/"
+    install(DIRECTORY "../../../Chapter3/include"
       DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
     # Install the project targets.
     install(TARGETS ${ARGN}
@@ -335,7 +335,7 @@ function(install_project)
     # Configure and install pkgconfig files.
     foreach(t ${ARGN})
       set(configured_pc "${generated_dir}/${t}.pc")
-      configure_file("${PROJECT_SOURCE_DIR}/cmake/${t}.pc.in"
+      configure_file("../../../../../cmake/${t}.pc.in"
         "${configured_pc}" @ONLY)
       install(FILES "${configured_pc}"
         DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
