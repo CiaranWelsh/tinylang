@@ -7,7 +7,8 @@ if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
 
     set(CMAKE_CXX_STANDARD 20)
 
-    find_package(LLVM CONFIG REQUIRED HINTS "D:/llvm-project/install-llvm-rel")
+    find_package(LLVM CONFIG REQUIRED HINTS "D:/llvm-project/install-llvm-$<IF:$<CONFIG:Debug>,dbg,rel>")
+#    find_package(ZLIB REQUIRED CONFIG)
 
     list(APPEND CMAKE_MODULE_PATH "${LLVM_CMAKE_DIR}")
     include(HandleLLVMOptions)

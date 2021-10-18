@@ -9,6 +9,13 @@ if (LLVM_COMPILER_IS_GCC_COMPATIBLE)
     endif ()
 endif ()
 
+
 add_executable(JIT JIT.cpp)
 include_directories(${CMAKE_SOURCE_DIR})
 target_link_libraries(JIT ${llvm_libs})
+
+set(target FibJIT)
+add_executable(${target} FibJIT.cpp)
+include_directories(${CMAKE_SOURCE_DIR})
+target_link_libraries(${target} ${llvm_libs})
+

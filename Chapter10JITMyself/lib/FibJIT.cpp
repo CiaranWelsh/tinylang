@@ -15,8 +15,10 @@
 #include "llvm/ExecutionEngine/Orc/JITTargetMachineBuilder.h"
 #include "llvm/ExecutionEngine/Orc/Mangling.h"
 #include "llvm/ExecutionEngine/Orc/RTDyldObjectLinkingLayer.h"
+#include "llvm/IR/IRBuilder.h"
 
 #include "llvm/ExecutionEngine/Orc/ExecutorProcessControl.h"
+#include <iostream>
 //#include "llvm/ExecutionEngine/Orc/TargetProcessControl.h"
 //#include "llvm/ExecutionEngine/Orc/Shared/TargetProcessControlTypes.h"
 #include "llvm/ExecutionEngine/SectionMemoryManager.h"
@@ -31,7 +33,7 @@
 int main(int argc, char *argv[]);
 
 
-static llvm::Function* CreateFibFunction(llvm::Module *M) {
+static llvm::Function *CreateFibFunction(llvm::Module *M) {
     llvm::LLVMContext &ctx = M->getContext();
 
     // Create the fib function and insert it into the model
@@ -48,7 +50,7 @@ static llvm::Function* CreateFibFunction(llvm::Module *M) {
 
     // get pointers to the constants
     llvm::Value *One = llvm::ConstantInt::get(llvm::Type::getInt32Ty(ctx), 1);
-    llvm::Value *Two = llvm::ConstantInt::get(llvm::Type::getInt32Ty(ctx), 1);
+    llvm::Value *Two = llvm::ConstantInt::get(llvm::Type::getInt32Ty(ctx), 2);
 
     // get ptr tointeger arg of the function
     llvm::Argument *ArgX = &*FibFn->arg_begin();
@@ -80,14 +82,6 @@ static llvm::Function* CreateFibFunction(llvm::Module *M) {
 
     return FibFn;
 }
-
-
-/**
- * Define a single input file containing IR
- */
-static llvm::cl::opt<std::string> InputFile(
-        llvm::cl::Positional, llvm::cl::Required, llvm::cl::desc("<input-file>")
-);
 
 class JIT {
 public:
@@ -299,7 +293,6 @@ private:
     llvm::orc::JITDylib &MainJITDylib;
 };
 
-
 llvm::Error jitmain(
         std::unique_ptr<llvm::Module> m, std::unique_ptr<llvm::LLVMContext> ctx,
         int argc, char *argv[]) {
@@ -311,10 +304,28 @@ llvm::Error jitmain(
     if (!JIT)
         return JIT.takeError();
 
+    // create the main function prototype
+    llvm::FunctionType *MainFnTy = llvm::FunctionType::get(
+            llvm::Type::getInt32Ty(*ctx), false
+    );
+
+    // create the main function
+    llvm::Function *MainFn = llvm::Function::Create(MainFnTy, llvm::Function::ExternalLinkage, "main", *m);
+    llvm::BasicBlock *MainBB = llvm::BasicBlock::Create(*ctx, "EntryBlock", MainFn);
+    llvm::IRBuilder<> builder(MainBB);
+    llvm::ConstantInt *Zero = builder.getInt32(0);
+    llvm::ReturnInst *ret = builder.CreateRet(Zero);
+
+    llvm::Value *IntArg = llvm::ConstantInt::get(llvm::Type::getInt32Ty(*ctx), 20);
+    llvm::Function *FibFn = CreateFibFunction(&*m);
+
+
+
     /**
      *  We add a LLVM IR module, choosing the thread safe version so that if we configure
      *  multithreading later we don't have a problem
      */
+
     if (auto Err = (*JIT)->addIRModule(llvm::orc::ThreadSafeModule(std::move(m), std::move((ctx))))) {
         return Err;
     }
@@ -327,17 +338,13 @@ llvm::Error jitmain(
     //    target datalayout = "e-m:e-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128"
 //    const llvm::DataLayout &DL = (*JIT)->getDataLayout();
 
-    /**
-     * Find the "main" symbol. This must be defined in the IR module
-     * provided on the command line. The lookup triggers compilation of
-     * this module. Other symbols are resolved using the
-     * generator added in the previous step.
-     */
-
     llvm::Expected<llvm::JITEvaluatedSymbol> MainSym = (*JIT)->lookup("main");
     if (!MainSym)
         return MainSym.takeError();
 
+//    llvm::Expected<llvm::JITEvaluatedSymbol> fib = (*JIT)->lookup("Fib");
+//    if (!fib)
+//        return fib.takeError();
     /**
      * Now we ask the returned JIT symbol for the address of the main function and cast
      * that address to the prototype of C main().
@@ -351,31 +358,23 @@ llvm::Error jitmain(
      */
     (void) Main(argc, argv);
 
+    llvm::Expected<llvm::JITEvaluatedSymbol> FibFnSymb = (*JIT)->lookup("fib");
+    if (!FibFnSymb)
+        return FibFnSymb.takeError();
+    auto *fib = (int (*)(int)) FibFnSymb->getAddress();
+    int x = fib(50);
+    std::cout << "x: " << x << std::endl;
+
     // report success
     return llvm::Error::success();
 }
 
-/**
- * @details The parseIRFile() function reads the IR passed in on the cmd line.
- * The code can be text or a bitode file. The function returns a poitner to
- * the create dmodule. Error handling is a bit different because a textual
- * IR file can be parsed, which is not necessarily syntatically correct.
- * The SMDiagnostic instance hold the error information in case of a syntax error.
- * The err message is printed and the application is exited.
- */
-std::unique_ptr<llvm::Module> loadModule(
-        llvm::StringRef Filename, llvm::LLVMContext &Ctx, const char *ProgName) {
-    llvm::SMDiagnostic Err;
-    std::unique_ptr<llvm::Module> Mod = llvm::parseIRFile(Filename, Err, Ctx);
-    if (!Mod.get()) {
-        Err.print(ProgName, llvm::errs());
-        exit(-1);
-    }
-    return std::move(Mod);
-}
 
 int main(int argc, char *argv[]) {
     llvm::InitLLVM X(argc, argv);
+
+    llvm::cl::ParseCommandLineOptions(argc, argv, "FibJIT\n");
+
 
     /**
      * Reliably detect host environment.
@@ -390,15 +389,13 @@ int main(int argc, char *argv[]) {
     llvm::InitializeNativeTargetAsmParser();
 
 
-    llvm::cl::ParseCommandLineOptions(argc, argv, "JIT\n");
-
     // initialize the context
-    auto Ctx = std::make_unique<llvm::LLVMContext>();
+    std::unique_ptr<llvm::LLVMContext> Ctx = std::make_unique<llvm::LLVMContext>();
 
-    std::unique_ptr<llvm::Module> M = loadModule(InputFile, *Ctx, argv[0]);
+    auto Module = std::make_unique<llvm::Module>("FibJit", *Ctx);
 
     llvm::ExitOnError exitOnError(std::string(argv[0]) + ":");
-    exitOnError(jitmain(std::move(M), std::move(Ctx), argc, argv));
+    exitOnError(jitmain(std::move(Module), std::move(Ctx), argc, argv));
 
     return 0;
 }
